@@ -8,7 +8,6 @@ var app = express();
 app.use(bodyParser.json());
 
 app.post("/todos",(req,res)=>{
-    console.log(req.body.text);
   var todo = new ToDo({
       text : req.body.text
   });
@@ -22,3 +21,7 @@ app.post("/todos",(req,res)=>{
 app.listen(3000,()=>{
     console.log("The server is up and running!");
 });
+
+module.exports = {
+    app
+}
