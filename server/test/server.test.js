@@ -4,9 +4,17 @@ const expect = require("expect");
 const {app} = require("./../server");
 const {ToDo} = require("./../models/ToDo");
 
+var todos = [{
+    text : "Todo Task 1"
+},{
+    text : "ToDo Task 2"
+}];
+
 beforeEach((done) => {
-    ToDo.remove({}).then(() => done());
-})
+    ToDo.remove({}).then(() => {
+        return ToDo.insertMany(todos);
+    }).then(() => done());
+});
 
 describe("Test the POST /todos",() =>{
   it("should create a new TODO", (done) => {
@@ -25,8 +33,8 @@ describe("Test the POST /todos",() =>{
          }
 
       ToDo.find().then((todos) => {
-          expect(todos.length).toEqual(1);
-          expect(todos[0].text).toBe(text);
+          expect(todos.length).toEqual(3);
+          expect(todos[2].text).toBe(text);
           done();
       }).catch(err => done(err));
       });
@@ -43,9 +51,26 @@ describe("Test the POST /todos",() =>{
           }
 
           ToDo.find().then((todos) => {
-            expect(todos.length).toEqual(0);
+            expect(todos.length).toEqual(2);
             done();
           }).catch(err => done(err));
       });
   });
 });
+
+describe("Test the GET /todos", () => {
+    it("should return all the todos",(done) => {
+        request(app)
+        .get("/todos")
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.todos.length).toEqual(2);
+        })
+        .end((err,res) => {
+           if(err){
+               return done(err);
+           }
+           done();
+        });
+    })
+})
