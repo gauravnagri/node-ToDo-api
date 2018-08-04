@@ -95,7 +95,7 @@ describe("Test the GET /todos/id route",() => {
 
   it("should return 404-Not Found",(done)=>{
       request(app)
-      .get(`/todos/${new ObjectID()}`)
+      .get(`/todos/${new ObjectID().toHexString()}`)
       .expect(404)
       .end(done);
   });
