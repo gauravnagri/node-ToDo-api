@@ -1,12 +1,14 @@
 const request = require("supertest");
 const expect = require("expect");
- 
+const {ObjectID} = require("mongodb");
 const {app} = require("./../server");
 const {ToDo} = require("./../models/ToDo");
 
 var todos = [{
+    _id: new ObjectID(),
     text : "Todo Task 1"
 },{
+    _id: new ObjectID(),
     text : "ToDo Task 2"
 }];
 
@@ -72,5 +74,36 @@ describe("Test the GET /todos", () => {
            }
            done();
         });
+    });
+});
+
+describe("Test the GET /todos/id route",() => {
+  it("should return a valid todo object",(done) => {
+    request(app)
+    .get(`/todos/${todos[0]._id}`)
+    .expect(200)
+    .expect((res) => {
+        expect(res.body.todo.text).toBe(todos[0].text)
     })
-})
+    .end((err,res) => {
+        if(err){
+            return done(err);
+        }
+        done();
+    });
+  });
+
+  it("should return 404-Not Found",(done)=>{
+      request(app)
+      .get(`/todos/${new ObjectID()}`)
+      .expect(404)
+      .end(done);
+  });
+
+  it("should return 400-Bad Request",(done)=>{
+    request(app)
+    .get("/todos/123")
+    .expect(400)
+    .end(done);
+});
+});
