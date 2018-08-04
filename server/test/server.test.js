@@ -32,9 +32,9 @@ describe("Test the POST /todos",() =>{
              return done(err);
          }
 
-      ToDo.find().then((todos) => {
-          expect(todos.length).toEqual(3);
-          expect(todos[2].text).toBe(text);
+      ToDo.find({text}).then((todos) => {
+          expect(todos.length).toEqual(1);
+          expect(todos[0].text).toBe(text);
           done();
       }).catch(err => done(err));
       });
