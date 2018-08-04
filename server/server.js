@@ -1,26 +1,24 @@
-const mongoose = require("mongoose");
+const {mongoose} = require("./db/mongoose");
+const express = require("express");
+const bodyParser = require("body-parser");
+var {ToDo} = require("./models/ToDo");
+var {User} = require("./models/User");
 
-mongoose.Promise = global.Promise;
+var app = express();
+app.use(bodyParser.json());
 
-mongoose.connect("mongodb://localhost:27017/ToDoApp",{
-    useNewUrlParser : true
+app.post("/todos",(req,res)=>{
+    console.log(req.body.text);
+  var todo = new ToDo({
+      text : req.body.text
+  });
+ todo.save().then((result)=>{
+   res.send(result);
+ },(err)=>{
+   res.status(400).send(err);
+ });
 });
 
-var user = mongoose.model("user",{
-  email:{
-      type:String,
-      required : true,
-      minlength : 1,
-      trim : true
-  }
-})
-
-var item = new user({
-  email : "abc@gmail.com"
-});
-
-item.save().then((doc)=>{
-    console.log("New User : ", doc);
-}, (err) =>{
-    console.log("Unable to save the user",err);
+app.listen(3000,()=>{
+    console.log("The server is up and running!");
 });
