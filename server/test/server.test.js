@@ -3,22 +3,10 @@ const expect = require("expect");
 const {ObjectID} = require("mongodb");
 const {app} = require("./../server");
 const {ToDo} = require("./../models/ToDo");
+const{todos,populateTodos,users,populateUsers} = require("./seed/seed");
 
-var todos = [{
-    _id: new ObjectID(),
-    text : "Todo Task 1"
-},{
-    _id: new ObjectID(),
-    text : "ToDo Task 2",
-    completed : true,
-    completedAt : 123
-}];
-
-beforeEach((done) => {
-    ToDo.remove({}).then(() => {
-        return ToDo.insertMany(todos);
-    }).then(() => done());
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe("Test the POST /todos",() =>{
   it("should create a new TODO", (done) => {
@@ -233,4 +221,82 @@ describe("Test the PATCH /todos/id route",() =>{
           done();
       });
     });
+});
+
+describe("test the authentication GET /users/me",()=>{
+    it("should authenticate the user",(done)=>{
+      request(app)
+      .get("/users/me")
+      .set("x-auth",users[0].tokens[0].token)
+      .expect(200)
+      .expect((res) => {
+          expect(res.body._id).toBe(users[0]._id.toHexString());
+          expect(res.body.email).toBe(users[0].email);
+      })
+      .end((err,res) => {
+         if(err){
+             return done(err);
+         }
+         done();
+      });
+    });
+
+    it("should return a 401",(done) => {
+       request(app)
+       .get("/users/me")
+       .expect(401)
+       .expect((res) => {
+           expect(res.body).toEqual({});
+       })
+       .end((err,res)=>{
+           if(err){
+               return done(err);
+           }
+           done();
+       })
+    });
+});
+
+describe("test the POST /users route",()=>{
+   var obj = {
+       email: "test@gmail.com",
+       password : "testpassword"
+   }
+   it("should add the user",(done)=>{
+       request(app)
+       .post("/users")
+       .send(obj)
+       .expect(200)
+       .expect((res)=>{
+           expect(res.headers["x-auth"]).toBeTruthy()
+           expect(res.body.email).toBe(obj.email);
+       })
+       .end((err,res)=>{
+           if(err){
+            return done(err);
+           }
+           done();
+       });
+   });
+
+   var invalidObj = {
+       email : "123gmail.com",
+       password : "test"
+   };
+
+   it("should return a 400 for invalid data",(done)=>{
+     request(app)
+     .post("/users")
+     .send(invalidObj)
+     .expect(400)
+     .end(done);
+   });
+
+   it("should return a 400 for duplicate email",(done)=>{
+    request(app)
+    .post("/users")
+    .send({email:users[0].email,password: "password@123"})
+    .expect(400)
+    .end(done);
+  });
 });
