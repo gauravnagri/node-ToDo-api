@@ -3,6 +3,7 @@ const expect = require("expect");
 const {ObjectID} = require("mongodb");
 const {app} = require("./../server");
 const {ToDo} = require("./../models/ToDo");
+const {User} = require("./../models/User");
 const{todos,populateTodos,users,populateUsers} = require("./seed/seed");
 
 beforeEach(populateUsers);
@@ -299,4 +300,51 @@ describe("test the POST /users route",()=>{
     .expect(400)
     .end(done);
   });
+});
+
+describe("POST /users/login",()=>{
+    it("should login and return auth token",(done)=>{
+        request(app)
+        .post("/users/login")
+        .send({email:users[1].email, password : users[1].password})
+        .expect(200)
+        .expect((res) => {
+            expect(res.headers["x-auth"]).toBeTruthy();
+        })
+        .end((err,res) => {
+            if(err){
+                return done(err);
+            }
+            User.findById({
+                _id: users[1]._id
+            }).then((user) =>{
+                expect(user.tokens[0]).toMatchObject({
+                    access:"auth",
+                    token: res.headers["x-auth"]
+                });
+                done();
+            }).catch(err => done(err));
+        });
+    });
+
+    it("should reject invalid login",(done) => {
+       request(app)
+       .post("/users/login")
+       .send({email:users[1].email,password:"testpwd"})
+       .expect(400)
+       .expect((res) => {
+           expect(res.headers["x-auth"]).toBeFalsy();
+       })
+       .end((err,res)=>{
+           if(err){
+               return done(err);
+           }
+           User.findById({
+               _id:users[1]._id
+           }).then((user) =>{
+               expect(user.tokens.length).toEqual(0);
+               done();
+           }).catch((err)=> done(err));
+       });
+    });
 });
