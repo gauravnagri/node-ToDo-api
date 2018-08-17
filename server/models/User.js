@@ -100,7 +100,16 @@ userSchema.statics.findByToken = function(token){
       "tokens.access": "auth",
       "tokens.token": token
   });
-}
+};
+
+userSchema.methods.removeToken = function(token){
+  var user = this;
+  return user.update({
+      $pull : {
+          tokens : {token}
+      }
+  });
+};
 
 var User = mongoose.model("user",userSchema);
 
